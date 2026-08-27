@@ -11,7 +11,13 @@ def fetch_etf_data(ticker_symbol) :
     try :
         df = yf.download(
         tickers=ticker_symbol,
+        group_by="ticker",
+        interval = "1d",
+        multi_level_index=False,
+        start=time_start,
+        end=time_end,
         )
+        df = df[["Open","Close", "High", "Low", "Volume"]]
         print(df)
     except :
         print('Erreur de téléchargement')
