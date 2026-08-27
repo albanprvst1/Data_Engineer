@@ -5,13 +5,21 @@ import datetime
 time_end = datetime.datetime.now()
 time_start = time_end.replace(year=time_end.year-1)
 
-print(time_end)
-print(time_start)
+
 
 def fetch_etf_data(ticker_symbol) :
     try :
-        print('coucou')
+        df = yf.download(
+        tickers=ticker_symbol,
+        )
+        print(df)
     except :
         print('Erreur de téléchargement')
 
-fetch_etf_data(1)
+
+
+if __name__ == "__main__":
+    print(time_end)
+    print(time_start)
+    ETF = 'NVDA' #print(str(input('ETF : ? ')))
+    fetch_etf_data(ETF)
