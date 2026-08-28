@@ -17,8 +17,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class ETFData(Base):
     __tablename__ = "etf_prices"
-
-    ticker = Column(String(),primary_key=True)
+    
+    id = Column(Integer(),primary_key=True)
+    ticker = Column(String())
     date = Column(String())
     open_price = Column(Float())
     close_price = Column(Float())

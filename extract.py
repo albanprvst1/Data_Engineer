@@ -34,6 +34,7 @@ def save_to_database():
     try:
     # 3. Instancier une nouvelle ligne de données
         nouvel_etf = ETFData(
+            id= 1,
             ticker="NVDA",
             date="2026-08-27",
             open_price=181.73,
