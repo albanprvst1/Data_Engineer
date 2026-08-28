@@ -1,0 +1,1 @@
+SELECT ticker,AVG(open_price),AVG(close_price),AVG(high_price) FROM etf_prices ;
