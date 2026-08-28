@@ -20,10 +20,11 @@ def fetch_etf_data(ticker_symbol) :
         )
         df = df[["Open","Close", "High", "Low", "Volume"]]
         print(df)
+        return df
     except :
         print('Erreur de téléchargement')
 
-def save_to_database():
+def save_to_database(df):
 
     # 1. Créer la table dans la base SQLite si elle n'existe pas encore
     init_db()
@@ -33,18 +34,21 @@ def save_to_database():
 
     try:
     # 3. Instancier une nouvelle ligne de données
-        nouvel_etf = ETFData(
-            id= 1,
-            ticker="NVDA",
-            date="2026-08-27",
-            open_price=181.73,
-            high_price=182.24,
-            low_price=178.86,
-            close_price=181.35,
-            volume=235518900,
-        )
-        session.add(nouvel_etf)
+
+        for date,row in df.iterrows():
+            nouvel_etf = ETFData(
+                ticker="NVDA",
+                date = "28/08/2026",
+                open_price=float(row["Open"]),
+                high_price=float(row["High"]),
+                low_price=float(row["Low"]),
+                close_price=float(row["Close"]),
+                volume=int(row["Volume"]),
+            )
+            session.add(nouvel_etf)
+
         session.commit()
+        
 
     except Exception as e:
         # En cas d'erreur, on annule les modifications
@@ -76,5 +80,5 @@ if __name__ == "__main__":
     print(time_end)
     print(time_start)
     ETF = 'NVDA' #print(str(input('ETF : ? ')))
-    fetch_etf_data(ETF)
-    save_to_database()
+    df = fetch_etf_data(ETF)
+    save_to_database(df)
