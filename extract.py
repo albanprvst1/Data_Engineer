@@ -37,8 +37,8 @@ def save_to_database(df):
 
         for date,row in df.iterrows():
             nouvel_etf = ETFData(
-                ticker="NVDA",
-                date = "28/08/2026",
+                ticker=ETF,
+                date = str(date),
                 open_price=float(row["Open"]),
                 high_price=float(row["High"]),
                 low_price=float(row["Low"]),
