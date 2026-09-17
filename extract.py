@@ -1,84 +1,52 @@
+import datetime 
 import pandas as pd
 import yfinance as yf
-import datetime 
-from sqlalchemy import *
-from db.database import init_db,ETFData, SessionLocal
+from google.cloud import storage
 
 time_end = datetime.datetime.now()
-time_start = time_end.replace(year=time_end.year-1)
+time_start = time_end.replace(year=time_end.year - 1)
 
+GCP_KEY_PATH = "gcp-key.json"
+GCP_BUCKET_NAME = "etf-raw-data-alban-2026"
 
-def fetch_etf_data(ticker_symbol) :
-    try :
+def fetch_etf_data(ticker_symbol):
+    try:
         df = yf.download(
-        tickers=ticker_symbol,
-        group_by="ticker",
-        interval = "1d",
-        multi_level_index=False,
-        start=time_start,
-        end=time_end,
+            tickers=ticker_symbol,
+            group_by="ticker",
+            interval="1d",
+            multi_level_index=False,
+            start=time_start,
+            end=time_end,
         )
-        df = df[["Open","Close", "High", "Low", "Volume"]]
-        print(df)
+        df = df[["Open", "Close", "High", "Low", "Volume"]]
         return df
-    except :
-        print("Erreur de téléchargement !")
+    except Exception as e:
+        print(f"Erreur de téléchargement : {e}")
+        return None
 
-def save_to_database(df):
-
-    # 1. Créer la table dans la base SQLite si elle n'existe pas encore
-    init_db()
-
-    # 2. Ouvrir une session de connexion
-    session = SessionLocal()
-
+def upload_to_gcs(df, bucket_name, destination_blob_name):
     try:
-    # 3. Instancier une nouvelle ligne de données
-
-        for date,row in df.iterrows():
-            nouvel_etf = ETFData(
-                ticker=ETF,
-                date = str(date),
-                open_price=float(row["Open"]),
-                high_price=float(row["High"]),
-                low_price=float(row["Low"]),
-                close_price=float(row["Close"]),
-                volume=int(row["Volume"]),
-            )
-            session.add(nouvel_etf)
-
-        session.commit()
+        # Authentification via la clé JSON
+        storage_client = storage.Client.from_service_account_json(GCP_KEY_PATH)
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(destination_blob_name)
         
-
+        # Conversion du DataFrame en mémoire
+        csv_data = df.to_csv(index=True)
+        
+        # Envoi sur Cloud Storage
+        blob.upload_from_string(csv_data, content_type='text/csv')
+        print(f" Succès : Données envoyées vers gs://{bucket_name}/{destination_blob_name}")
     except Exception as e:
-        # En cas d'erreur, on annule les modifications
-        session.rollback()
-        print(f"Erreur lors de l'insertion : {e}")
-
-    try:
-        # Récupérer toutes les lignes de la table
-        toutes_les_donnees = session.query(ETFData).all()
-
-        if not toutes_les_donnees:
-            print("La base de données est vide.")
-            return
-
-        # 3. Parcourir et afficher chaque ligne
-        for ligne in toutes_les_donnees:
-            print(
-                f"Ticker: {ligne.ticker} | Date: {ligne.date} | Clôture: {ligne.close_price}$"
-            )
-
-    except Exception as e:
-        print(f"Erreur lors de la lecture : {e}")
-
-
-    #Toujours fermer la session
-    session.close()
+        print(f" Erreur lors de l'upload : {e}")
 
 if __name__ == "__main__":
-    print(time_end)
-    print(time_start)
-    ETF = 'NVDA' #print(str(input('ETF : ? ')))
+    ETF = 'NVDA'
+    print(f"Téléchargement des données pour {ETF}...")
     df = fetch_etf_data(ETF)
-    save_to_database(df)
+    
+    if df is not None and not df.empty:
+        # On définit un chemin avec dossier dans le bucket (ex: raw/NVDA_data.csv)
+        destination_path = f"raw/{ETF}_data.csv"
+        upload_to_gcs(df, GCP_BUCKET_NAME, destination_path)
