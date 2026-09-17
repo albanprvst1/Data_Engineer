@@ -22,7 +22,7 @@ def fetch_etf_data(ticker_symbol) :
         print(df)
         return df
     except :
-        print('Erreur de téléchargement')
+        print("Erreur de téléchargement !")
 
 def save_to_database(df):
 

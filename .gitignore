@@ -1,2 +1,3 @@
 .venv/
 bourse.db
+gcp-key.json
