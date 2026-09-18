@@ -48,5 +48,5 @@ if __name__ == "__main__":
     
     if df is not None and not df.empty:
         # On définit un chemin avec dossier dans le bucket (ex: raw/NVDA_data.csv)
-        destination_path = f"raw/{ETF}_data.csv"
+        destination_path = f"raw/{ETF}_data_{datetime.datetime.now().strftime("%Y-%m-%d")}.csv"
         upload_to_gcs(df, GCP_BUCKET_NAME, destination_path)
